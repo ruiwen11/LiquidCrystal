@@ -12,6 +12,7 @@ package MarkImage; /**
  * 图片显示出来之后请不要移动图片。因为移动之时也会出发鼠标监听器
  */
 
+import Fitting.DrawFunction;
 import Fitting.PrepareData;
 import tech.tablesaw.api.Table;
 
@@ -25,8 +26,8 @@ import java.util.List;
 
 public class MarkCrystal extends JFrame {
     //图片路径
-    static String imageRoutine = "src/main/resources/liquid2.png";
-    static String CSVOfHue = "src/main/resources/hueAndPower.csv";
+    public static String imageRoutine = "src/main/resources/liquid2.png";
+    public static String CSVOfHue = DrawFunction.CSVOfHue;
     private int width;  //图片的宽
     private int height; //图片的长
     private int centerX, centerY, radius;   //计算出来的圆的属性。
@@ -84,6 +85,7 @@ public class MarkCrystal extends JFrame {
         int yesOfClearData = JOptionPane.showConfirmDialog(null, "是否清除历史数据？", "提示", JOptionPane.YES_NO_OPTION);
         if(yesOfClearData == JOptionPane.YES_OPTION){
             PrepareData.deleteFile(CSVOfHue);
+            PrepareData.writeToCSV(CSVOfHue, "x,y\n");
         }
 
         super.addWindowListener(new WindowAdapter() {

@@ -10,6 +10,10 @@ import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import tech.tablesaw.api.Table;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -95,6 +99,30 @@ public class PrepareData {
     public static boolean deleteFile(String routine){
         File file = new File(routine);
         return file.delete();
+    }
+
+    /**
+     * 保存图片
+     * @param jFrame
+     * @param fileName
+     */
+    public static void savePicture(JFrame jFrame, String fileName){
+        //获得窗口的内容面板
+        Container content = jFrame.getContentPane();
+        //创建图片缓冲对象
+        BufferedImage image = new BufferedImage(jFrame.getWidth()-10, jFrame.getHeight()-30, BufferedImage.TYPE_3BYTE_BGR);
+        //获得图片对象
+        Graphics graphics = image.createGraphics();
+        //将窗口内容输出到图形对象中
+        content.printAll(graphics);
+        //保存为图片
+        File file = new File(fileName);
+        try {
+            ImageIO.write(image, "jpg", file);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        graphics.dispose();
     }
 
     /**
