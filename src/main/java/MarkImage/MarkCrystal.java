@@ -12,14 +12,12 @@ package MarkImage; /**
  * 图片显示出来之后请不要移动图片。因为移动之时也会出发鼠标监听器
  */
 
-import Fitting.DrawFunction;
+import Fitting.DrawFunctionPicture;
 import Fitting.PrepareData;
-import tech.tablesaw.api.Table;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +25,7 @@ import java.util.List;
 public class MarkCrystal extends JFrame {
     //图片路径
     public static String imageRoutine = "src/main/resources/liquid2.png";
-    public static String CSVOfHue = DrawFunction.CSVOfHue;
+    public static String CSVOfHue = DrawFunctionPicture.CSVOfHue;
     private int width;  //图片的宽
     private int height; //图片的长
     private int centerX, centerY, radius;   //计算出来的圆的属性。

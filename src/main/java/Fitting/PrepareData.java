@@ -64,7 +64,7 @@ public class PrepareData {
             double x = startX + slot*i;
             double y = function(x);
             y = y<0 ? 0 : y;
-            y = y>1.2 ? 1.2 : y;
+//            y = y>1.2 ? 1.2 : y;
             writeToCSV(file, y + "," + x + "\n");
         }
     }
@@ -72,17 +72,20 @@ public class PrepareData {
     /**
      * 每次写入数据都要新建一个writer，开销比较大。
      * 这边后期建议改完单例模式。
-     * @param file
+     * @param fileName
      * @param content
      */
     //todo
-    public static void writeToCSV(String file, String content) throws IOException {
+    public static void writeToCSV(String fileName, String content) throws IOException {
         try {
-            if(writer == null){
-                writer = new BufferedWriter(new FileWriter(file));
-            }
+            File file = new File(fileName);
+            if(!file.exists())
+                file.createNewFile();
+
+            writer = new BufferedWriter(new FileWriter(file, true));//该true表示向已存在的文件续写内容
             writer.write(content);
             writer.flush();
+            writer.close();
         }catch (IOException e) {
             writer.close();
             writer = null;
@@ -204,9 +207,8 @@ public class PrepareData {
         for(int i=0; i<elements.length; i++){
             y += elements[i] * Math.pow(x, i);
         }
-
         y = y<0 ? 0 : y;
-        y = y>1.2 ? 1.2 : y;
+//        y = y>1.2 ? 1.2 : y;
         return y;
     }
 
