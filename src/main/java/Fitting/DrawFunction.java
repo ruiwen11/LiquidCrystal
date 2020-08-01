@@ -1,14 +1,21 @@
 package Fitting;
 
-import tech.tablesaw.api.Table;
+/**
+ * 本类从resources路径下读取csv文件中计算的数据并
+ * 绘制成函数图像
+ * @author ruiwen
+ * @version 2020-7-10
+ */
 
+import tech.tablesaw.api.Table;
 import javax.swing.*;
 import java.awt.Graphics;
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class DrawFunction extends JFrame {
-    static String experienceData = "src/main/resources/collectedData.csv";
+    //实验数据和拟合出来的数据
+    static String experimentData = "src/main/resources/collectedData.csv";
     static String calculatedData = "src/main/resources/calculatedData.csv";
     private static PrepareData data = new PrepareData();
     static int W = 800, H = 600;    //图片的长宽
@@ -18,10 +25,12 @@ public class DrawFunction extends JFrame {
     static double minPower = 0, maxPower = 1.2; //hue值的最大最小值
 
     Graphics G;
-    private static ArrayList<Double> pointsX = new ArrayList<Double>();
-    private static ArrayList<Double> pointsY = new ArrayList<Double>();
+    private static ArrayList<Double> pointsX = new ArrayList<>();
+    private static ArrayList<Double> pointsY = new ArrayList<>();
 
-    //读取已经计算完成的点。
+    /**
+     * 读取已经计算完成的点。
+     */
     public static void readCalculatedData(String file){
         try {
             Table table = Table.read().csv(file);
@@ -36,8 +45,10 @@ public class DrawFunction extends JFrame {
         }
     }
 
+    /**
+     * 画坐标轴
+     */
     public void setOrigin() {
-        // show coordinate axis
         //画x轴
         G.drawLine(0, y0, W, y0);
         //画y轴
@@ -46,6 +57,9 @@ public class DrawFunction extends JFrame {
         G.drawString("power", x0-20, H/2);
     }
 
+    /**
+     * 构造函数，调用内部类NewPanel的构造函数完成画图。
+     */
     public DrawFunction() {
         add(new NewPanel());
     }
@@ -74,16 +88,16 @@ public class DrawFunction extends JFrame {
 
     public static void main(String[] args) throws IOException {
         //拟合并计算出足够多的点，比如一万个，只要把这些点画到图中就画出函数图像了。
-//        data.readCollectedData(experienceData);
+//        data.readCollectedData(experimentData);
 //        data.train(3);
-//        data.calculatePoints(calculatedData,10000, 0, 255);
+//        //data.calculatePoints(calculatedData,10000, 0, 255);
 
+        //画函数图像
         readCalculatedData(calculatedData);
         DrawFunction frame = new DrawFunction();
         frame.setTitle("DrawFunction");
         frame.setSize(W, H);
-//        frame.setLocationRelativeTo(null);
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
         frame.setResizable(false);
     }

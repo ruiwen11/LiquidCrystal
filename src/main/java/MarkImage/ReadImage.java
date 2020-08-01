@@ -1,9 +1,19 @@
 package MarkImage;
 
+/**
+ * 本类只提供了两个接口：
+ * 1. 读取图片的所有像素
+ * 2. 计算标注的圆内的像素的平均hue值。
+ * @author ruiwen
+ * @version 2020-7-15
+ */
+
+import org.junit.Test;
+
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class ReadImage {
@@ -44,29 +54,45 @@ public class ReadImage {
      * 计算液晶所有像素的平均hue值。
      * @param crystalPixel
      */
-    public static int getHue(ArrayList<Pixel> crystalPixel){
-        return 0;
+    public static double getAverageHue(ArrayList<Pixel> crystalPixel){
+        double hueSum = 0;
+        for(Pixel pixel : crystalPixel)
+            hueSum += calculateHue(pixel);
+        return hueSum/crystalPixel.size();
     }
-
     /**
-     * 返回屏幕色彩值
-     * @param x
-     * @param y
+     * 计算一个像素hue值的逻辑
+     * @param pixel
      * @return
-     * @throws AWTException
      */
-//    public static int getScreenPixel(int x, int y) throws AWTException { // 函数返回值为颜色的RGB值。
-//        Robot rb = null; // java.awt.image包中的类，可以用来抓取屏幕，即截屏。
-//        rb = new Robot();
-//        Toolkit tk = Toolkit.getDefaultToolkit(); // 获取缺省工具包
-//        Dimension di = tk.getScreenSize(); // 屏幕尺寸规格
-//        System.out.println(di.width);
-//        System.out.println(di.height);
-//        Rectangle rec = new Rectangle(0, 0, di.width, di.height);
-//        BufferedImage bi = rb.createScreenCapture(rec);
-//        int pixelColor = bi.getRGB(x, y);
-//
-//        return 16777216 + pixelColor; // pixelColor的值为负，经过实践得出：加上颜色最大值就是实际颜色值。
-//    }
+    private static double calculateHue(Pixel pixel){
+        double max = Math.max(pixel.blue, Math.max(pixel.green, pixel.red));
+        double min = Math.min(pixel.blue, Math.min(pixel.green, pixel.red));
+        if(max == min)
+            return 0;
+
+        //为了增加精度，hue值保留6位小数。
+        DecimalFormat format = new DecimalFormat("0.000000");
+        double hue = 0;
+        if(max == pixel.red){
+            System.out.println(format.format((pixel.green-pixel.blue) / (max-min)));
+            hue = Double.parseDouble(format.format((pixel.green-pixel.blue) / (max-min)));
+        }
+        else if(max == pixel.green)
+            hue = 2 + Double.parseDouble(format.format((pixel.blue-pixel.red) / (max-min)));
+        else if(max == pixel.blue)
+            hue = 4 + Double.parseDouble(format.format((pixel.red-pixel.green) / (max-min)));
+        hue = hue * 60;
+        hue = hue<0? hue+360 : hue;
+        return hue;
+    }
+    /**
+     * 写个案例，测试一下hue值的逻辑对不对。
+     */
+    @Test
+    public void test(){
+        Pixel pixel = new Pixel(255, 206, 227);
+        System.out.println(calculateHue(pixel));
+    }
 
 }

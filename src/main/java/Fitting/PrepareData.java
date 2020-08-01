@@ -1,21 +1,34 @@
 package Fitting;
 
+/**
+ * 本类用于计算用于拟合实验数据，输出拟合出来的多项式，并计算画图所需要的点。
+ * @author ruiwen
+ * @version 2020-7-10
+ */
+
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import tech.tablesaw.api.Table;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
 public class PrepareData {
-    private double[] x;
-    private double[] y;
-    private double[] elements;
+    //变量全部声明为static，这样就不必每次使用时都创建该类的对象。
+    private static double[] x;
+    private static double[] y;
+    private static double[] elements;
+    //创建一个单例的writer，用于向文件中写数据。用单例模式减少开销。
     private static BufferedWriter writer = null;
+    //保存拟合出来的多项式系数，方便以后调用
+    private static String coefficient = "src/main/resources/coefficient.csv";
 
-    //从csv文件的数据已表格的形式读入。
+    /**
+     * 从csv文件的数据以表格的形式读入实验数据。
+     */
     public void readCollectedData(String file){
         try {
             Table table = Table.read().csv(file);
@@ -32,6 +45,14 @@ public class PrepareData {
         }
     }
 
+    /**
+     * 根据拟合出对的多项式，就算出n个在x轴上分布均匀的点用于函数图像绘制。
+     * @param file 保存数据的路径
+     * @param numberOfPoints 画的点的个数
+     * @param startX
+     * @param endX hue值的范围，用于计算每个点的hue
+     * @throws IOException
+     */
     public void calculatePoints(String file, int numberOfPoints, double startX, double endX) throws IOException {
         writeToCSV(file,"y,x\n");
         double slot = (endX - startX)/numberOfPoints;
@@ -67,12 +88,22 @@ public class PrepareData {
     }
 
     /**
+     * 当需要重新计算数据时，删除文件。
+     * @param routine
+     * @return
+     */
+    public static boolean deleteFile(String routine){
+        File file = new File(routine);
+        return file.delete();
+    }
+
+    /**
      * 进行拟合，引入的是commons-math3这个包。
      * 使用很简单，将每一对坐标放进WeightedObservedPoints对象中。
      * 然后new一个多项拟合器PolynomialCurveFitter。fit这些点。
      * 使用的commons-math3版本是3.6.1，还支持正弦拟合和高斯拟合。
      */
-    public void train(int degree){
+    public void train(int degree) throws IOException {
         WeightedObservedPoints points = new WeightedObservedPoints();
 
         for(int i=0; i<x.length; i++){
@@ -82,6 +113,11 @@ public class PrepareData {
         PolynomialCurveFitter fitter = PolynomialCurveFitter.create(degree);
         elements = fitter.fit(points.toList());
 
+        //将多项式拟合的结果保存到文件中，以备下次使用。
+        writeToCSV(coefficient, "coefficient\n");
+        for (double d : elements)
+            writeToCSV(coefficient, d+"\n");
+
         printFormula(elements);
     }
 
@@ -90,7 +126,7 @@ public class PrepareData {
      * @param elements
      * @return
      */
-    public String printFormula(double[] elements){
+    public static String printFormula(double[] elements){
         StringBuilder equation = new StringBuilder("y = ");
         for(int i=elements.length-1; i>0; i--){
             if(elements[i] < 0){  //如果系数小于0，加上-
@@ -126,12 +162,23 @@ public class PrepareData {
      * @param x
      * @return
      */
-    public double function(double x){
+    public static double function(double x) throws IOException {
+        //如果之前训练过，就可以直接从csv中读取数据，而不必重新训练。
+        if (elements == null || elements.length < 1){
+            Table table = Table.read().csv(coefficient);
+            elements = new double[table.rowCount()];
+            for (int i=0; i<elements.length; i++){
+                elements[i] = Double.parseDouble(table.column(0).getString(i));
+            }
+        }
+
         double y = 0;
         for(int i=0; i<elements.length; i++){
             y += elements[i] * Math.pow(x, i);
         }
 
+        y = y<0 ? 0 : y;
+        y = y>1.2 ? 1.2 : y;
         return y;
     }
 
@@ -140,7 +187,7 @@ public class PrepareData {
      * @param d
      * @return
      */
-    public String keep10digits(double d){
+    public static String keep10digits(double d){
         DecimalFormat format = new DecimalFormat("0.0000000000");
         return format.format(d);
     }
