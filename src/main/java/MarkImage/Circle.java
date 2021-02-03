@@ -7,14 +7,17 @@ package MarkImage;
  * @version 2020-8-1
  */
 public class Circle {
-    int centerX;
-    int centerY;
-    int radius;   //计算出来的圆的属性。
+    public int centerX;
+    public int centerY;
+    public int radius;   //计算出来的圆的属性。
 
-    public Circle(int centerX, int centerY, int radius) {
+    public String hue;  //圆内所有像素点的平均hue值。
+
+    public Circle(int centerX, int centerY, int radius, String hue) {
         this.centerX = centerX;
         this.centerY = centerY;
         this.radius = radius;
+        this.hue = hue;
     }
 
     public void setCenterX(int centerX) {

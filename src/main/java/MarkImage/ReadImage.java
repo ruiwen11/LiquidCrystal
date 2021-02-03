@@ -2,8 +2,9 @@ package MarkImage;
 
 /**
  * 本类只提供了两个接口：
- * 1. 读取图片的所有像素
+ * 1. 读取图片的所有像素点
  * 2. 计算标注的圆内的像素的平均hue值。
+ *
  * @author ruiwen
  * @version 2020-7-15
  */
@@ -22,7 +23,7 @@ public class ReadImage {
      * 读取一张图片的RGB值
      * @throws Exception
      */
-    public static Pixel[][] getImagePixel(String image) throws Exception {
+    public static Pixel[][] getImagePixel(String image) {
         int[] rgb = new int[3];
         File file = new File(image);
         BufferedImage bi = null;//
@@ -86,6 +87,7 @@ public class ReadImage {
         hue = hue<0? hue+360 : hue;
         return hue;
     }
+
     /**
      * 写个案例，测试一下hue值的逻辑对不对。
      */

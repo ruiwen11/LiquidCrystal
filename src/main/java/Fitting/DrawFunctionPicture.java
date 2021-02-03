@@ -38,6 +38,7 @@ public class DrawFunctionPicture extends JFrame {
     private static ArrayList<Double> markPointsY = new ArrayList<>();//标注的液晶的色调值和功率。
 
     private static PrepareData data = new PrepareData();
+
     /**
      * 读取已经计算完成的点。
      */

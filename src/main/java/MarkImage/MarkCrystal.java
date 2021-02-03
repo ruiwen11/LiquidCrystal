@@ -1,16 +1,4 @@
-package MarkImage; /**
- * @author 小芮芮
- * @date 2020.7.2
- * 画圆的逻辑：捕捉两个鼠标动作，一个是按下鼠标，一个是释放鼠标。
- * 连接按下鼠标和释放鼠标时鼠标所在的两个点，画出的线就是圆的直径。
- * 方法getPixelsOfCrystal将会返回圆内的所有像素点。
- * 需要计算功率的话，在第104行调用一个计算功率的接口。
- *
- * ！！！重要！！！
- * 如果需要重新拟合，记得删除原先保存拟合数据的文件，但不要删除collectedData.csv！！！
- *
- * 图片显示出来之后请不要移动图片。因为移动之时也会出发鼠标监听器
- */
+package MarkImage;
 
 import Fitting.DrawFunctionPicture;
 import Fitting.PrepareData;
@@ -20,11 +8,27 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * 该类实现标注液晶和计算hue值得功能，是本项目和核心组件。
+ * 但是该类已被BatchMarkCrystal取代。BatchMarkCrystal实现得功能可以同时操作多张图片
+ *
+ * 画圆的逻辑：捕捉两个鼠标动作，一个是按下鼠标，一个是释放鼠标。
+ * 连接按下鼠标和释放鼠标时鼠标所在的两个点，画出的线就是圆的直径。
+ * 方法getPixelsOfCrystal将会返回圆内的所有像素点。
+ * 需要计算功率的话，在第104行调用一个计算功率的接口。
+ *
+ * ！！！重要！！！
+ * 如果需要重新拟合，记得删除原先保存拟合数据的文件，但不要删除collectedData.csv！！！
+ *
+ * 图片显示出来之后请不要移动图片。因为移动之时也会出发鼠标监听器
+ *
+ * @author 小芮芮
+ * @date 2020.7.2
+ */
 public class MarkCrystal extends JFrame {
     //图片路径
-    public static String imageRoutine = "src/main/resources/liquid2.png";
+    public static String imageRoutine = "src\\main\\resources\\UnMarkedPictures\\liquid1.png";
     public static String CSVOfHue = DrawFunctionPicture.CSVOfHue;
     private int width;  //图片的宽
     private int height; //图片的长
@@ -44,8 +48,7 @@ public class MarkCrystal extends JFrame {
      *
      * 解决方法：双缓存技术。
      * 原理详见：https://blog.csdn.net/weixin_44552215/article/details/98748436
-     * 原本我们在内存中，只有一张图片的缓存，也就是26行的对象image。
-     * 现在我们用doubleBuffer作为第二缓存。两张图片交替展示。
+     * 原本我们在内存中，只有一张图片的缓存，现在我们用doubleBuffer作为第二缓存。两张图片交替展示。
      * 当在一张图片上计算圆轨迹时，我们就展示另一张图片。
      * 当算法计算完毕并画出圆时，我们就展示这张图片。然后在另一张图片上重新开始计算。
      */
@@ -64,6 +67,11 @@ public class MarkCrystal extends JFrame {
      */
     //ArrayList<Point> passedPoints = new ArrayList<>();
 
+    /**
+     * 重载构造函数，用于批量读取图片
+     * @param routine
+     * @throws Exception
+     */
     public MarkCrystal(String routine) throws Exception {
         image = new ImageIcon(routine); //读取图片
         pixels = ReadImage.getImagePixel(routine);  //获取图片的像素矩阵。
@@ -78,12 +86,12 @@ public class MarkCrystal extends JFrame {
         super.setTitle("Liquid Crystal");
 
         /**
-         * 在画图之前先删除以前画图留下的数据，避免冲突。
+         * 在画图之前先点选是否删除之前标注的数据。
          */
         int yesOfClearData = JOptionPane.showConfirmDialog(null, "是否清除历史数据？", "提示", JOptionPane.YES_NO_OPTION);
         if(yesOfClearData == JOptionPane.YES_OPTION){
             PrepareData.deleteFile(CSVOfHue);
-            PrepareData.writeToCSV(CSVOfHue, "x,y\n");
+            PrepareData.writeToCSV(CSVOfHue, "hue,power\n");
         }
 
         super.addWindowListener(new WindowAdapter() {
@@ -128,16 +136,17 @@ public class MarkCrystal extends JFrame {
                 x2 = e.getX();
                 y2 = e.getY();
                 prepareCircle(x1, y1, x2, y2);
+                //计算圆内所有像素点的平均hue值
+                double hue = ReadImage.getAverageHue(getPixelsOfCrystal(centerX, centerY, radius));
                 //保存已经画出来的圆，这样画第二个圆的时候，之前的圆就不会被清除。
-                paintedCircles.add(new Circle(centerX, centerY,radius));
-                //repaint();  //该方法会清空原来画的圆，并在底层调用163行的paint方法。
+                paintedCircles.add(new Circle(centerX, centerY,radius, PrepareData.keep2digits(hue)));
+                repaint();
                 //将最终画成的圆内的像素点全部加入一个数组中并打印在控制台。
-                print(getPixelsOfCrystal(centerX, centerY, radius));
+//                PrepareData.print(getPixelsOfCrystal(centerX, centerY, radius));
 
                 //标注完液晶之后，跳出一个弹框提示是否保存液晶。
                 int yes = JOptionPane.showConfirmDialog(null, "是否保存该液晶？", "提示", JOptionPane.YES_NO_OPTION);
-                if(yes == JOptionPane.YES_OPTION){
-                    double hue = ReadImage.getAverageHue(getPixelsOfCrystal(centerX, centerY, radius));
+                if (yes == JOptionPane.YES_OPTION) {
                     try {
                         PrepareData.writeToCSV(CSVOfHue, hue+","+PrepareData.function(hue)+"\n");
                     } catch (IOException ioException) {
@@ -193,27 +202,56 @@ public class MarkCrystal extends JFrame {
     }
 
     /**
-     * 重载JFrame的paint方法，也就是画图的方法，来实现双缓存。
+     * 重写JFrame的paint方法，也就是画图的方法，来实现双缓存。
      * @param g
      */
     @Override
     public void paint(Graphics g){
-        if (doubleBuffer == null)   //初始化第二缓存
+        if (doubleBuffer == null){   //初始化第二缓存（图片）
             doubleBuffer = this.createImage(width, height);
-        Graphics gImage = doubleBuffer.getGraphics();   //获取第二缓存的画笔，我们就是用这个对象来画圆和直径的。
+        }
+        Graphics gImage = doubleBuffer.getGraphics();   //获取第二缓存的画笔，我们就是用这个对象在第二缓存上画圆和直径。
         //将液晶图片放到第二缓存上。
         super.paint(gImage);
-        //画圆和直径。
-        gImage.drawLine(x1, y1, x2, y2);
+        //画直径。
+//        gImage.drawLine(x1, y1, x2, y2);
+        //画圆
         gImage.drawOval(centerX-radius, centerY-radius, radius*2, radius*2);
         /**
          * 因为每次拖动鼠标时，都会先把图片清空，根据鼠标被拖到的位置再画一个圆。
          * 这样之前的标注也会被清除。我们把之前的圆保存在数组里，每次画图时都把他们重新画出来。
          */
-        for(Circle circle : paintedCircles)
+        for(Circle circle : paintedCircles){
             gImage.drawOval(circle.centerX-circle.radius, circle.centerY-circle.radius, circle.radius*2, circle.radius*2);
+        }
+        //保存标注hue值
+        for (Circle circle : paintedCircles){
+            writeHue(gImage, circle);
+        }
+
         //交替当前屏幕上的图片和第二缓存。
         g.drawImage(doubleBuffer, 0, 0, this);
+    }
+
+    /**
+     * 将计算出来的hue值标注在图片上。
+     * 需要计算标注的位置。
+     *
+     * @param g 画笔
+     * @param circle 根据圆属性计算标注位置和属性
+     */
+    private void writeHue(Graphics g, Circle circle){
+        Font font = new Font("宋体", Font.PLAIN, 15);
+        g.setFont(font);
+        g.setColor(Color.red);
+
+        //计算文字长度和宽度
+        FontMetrics fm = g.getFontMetrics(font);
+        int txtWidth = fm.stringWidth(circle.hue);
+        int txtHeight = fm.getHeight();
+
+        //标注
+        g.drawString(circle.hue, circle.centerX-txtWidth/2, circle.centerY+txtHeight/2);
     }
 
     /**
@@ -284,11 +322,6 @@ public class MarkCrystal extends JFrame {
         int tmpX = (x1>x2) ? x1-x2 : x2-x1;
         int tmpY = (y1>y2) ? y1-y2 : y2-y1;
         return Math.sqrt(tmpX*tmpX + tmpY*tmpY);
-    }
-
-    public void print(List list){
-        for (Object object : list)
-            System.out.println(object);
     }
 
     public static void main(String[] args) throws Exception {

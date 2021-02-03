@@ -2,10 +2,12 @@ package Fitting;
 
 /**
  * 本类用于计算用于拟合实验数据，输出拟合出来的多项式，并计算画图所需要的点。
+ * 此外该类还提供一些公用的静态方法，如:打印数组，读写文件和保存图片
  * @author ruiwen
  * @version 2020-7-10
  */
 
+import BatchMarkCrystals.ImageCache;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import tech.tablesaw.api.Table;
@@ -19,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.List;
 
 public class PrepareData {
     //变量全部声明为static，这样就不必每次使用时都创建该类的对象。
@@ -28,7 +31,10 @@ public class PrepareData {
     //创建一个单例的writer，用于向文件中写数据。用单例模式减少开销。
     private static BufferedWriter writer = null;
     //保存拟合出来的多项式系数，方便以后调用
-    private static String coefficient = "src/main/resources/coefficient.csv";
+    private static String coefficient = "src\\main\\resources\\coefficient.csv";
+    private static final int OFFSET_X = 3;
+    private static final int OFFSET_Y = 25;
+
 
     /**
      * 从csv文件的数据以表格的形式读入实验数据。
@@ -105,7 +111,7 @@ public class PrepareData {
     }
 
     /**
-     * 保存图片
+     * 保存通用的图片
      * @param jFrame
      * @param fileName
      */
@@ -113,7 +119,7 @@ public class PrepareData {
         //获得窗口的内容面板
         Container content = jFrame.getContentPane();
         //创建图片缓冲对象
-        BufferedImage image = new BufferedImage(jFrame.getWidth()-10, jFrame.getHeight()-30, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage image = new BufferedImage(jFrame.getWidth()-OFFSET_X, jFrame.getHeight()-OFFSET_Y, BufferedImage.TYPE_3BYTE_BGR);
         //获得图片对象
         Graphics graphics = image.createGraphics();
         //将窗口内容输出到图形对象中
@@ -122,6 +128,32 @@ public class PrepareData {
         File file = new File(fileName);
         try {
             ImageIO.write(image, "jpg", file);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        graphics.dispose();
+    }
+
+    /**
+     * 保存标注的图片
+     * @param imageCache
+     * @param fileName
+     */
+    public static void savePicture(ImageCache imageCache, String fileName){
+        //获得窗口的内容面板
+        Container content = imageCache.getContentPane();
+        //创建图片缓冲对象
+        BufferedImage image = new BufferedImage(imageCache.getWidth()-OFFSET_X, imageCache.getHeight()-OFFSET_Y, BufferedImage.TYPE_3BYTE_BGR);
+        //获得图片对象
+        Graphics graphics = image.createGraphics();
+        //将窗口内容输出到图形对象中
+        content.printAll(graphics);
+        //将标注内容也输出
+        imageCache.recoverMarks(graphics, OFFSET_X, OFFSET_Y);
+        //保存为图片
+        File file = new File(fileName);
+        try {
+            ImageIO.write(image, "png", file);
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -188,10 +220,11 @@ public class PrepareData {
     }
 
     /**
-     * 计算函数方程。
+     * 读入拟合函数的系数，并根据hue值计算功率。
      * 输入x，求出y。
-     * @param x
-     * @return
+     *
+     * @param x hue
+     * @return y 功率
      */
     public static double function(double x) throws IOException {
         //如果之前训练过，就可以直接从csv中读取数据，而不必重新训练。
@@ -219,6 +252,21 @@ public class PrepareData {
      */
     public static String keep10digits(double d){
         DecimalFormat format = new DecimalFormat("0.0000000000");
+        return format.format(d);
+    }
+
+    public static void print(List list){
+        for (Object object : list)
+            System.out.println(object);
+    }
+
+    /**
+     * 保留两位小数
+     * @param d
+     * @return
+     */
+    public static String keep2digits(double d){
+        DecimalFormat format = new DecimalFormat("0.00");
         return format.format(d);
     }
 }
